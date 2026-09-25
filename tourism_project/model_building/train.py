@@ -1,0 +1,126 @@
+import pandas as pd
+from sklearn.compose import make_column_transformer
+from sklearn.pipeline import make_pipeline
+import xgboost as xgb
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import joblib
+from huggingface_hub import login, HfApi, create_repo
+from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
+import mlflow
+import os
+
+mlflow.set_tracking_uri("http://localhost:5000")   # complete the code to set the MLflow tracking URI
+mlflow.set_experiment("tourism_package_prediction")     # complete the code to set the MLflow experiment name
+
+# Hugging Face API authentication
+api = HfApi(token=os.getenv("HF_TOKEN"))  # complete the code to read HF_TOKEN from environment variable
+Xtrain_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/Xtrain.csv"  # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
+Xtest_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/Xtest.csv"    # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
+ytrain_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/ytrain.csv"  # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
+ytest_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/ytest.csv"    # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
+
+# Load datasets
+Xtrain = pd.read_csv(Xtrain_path)
+Xtest  = pd.read_csv(Xtest_path)
+ytrain = pd.read_csv(ytrain_path)
+ytest  = pd.read_csv(ytest_path)
+
+numeric_features = ['Age', 'NumberOfPersonVisiting', 'PreferredPropertyStar', 'NumberOfTrips', 'Passport', 'OwnCar', 'NumberOfChildrenVisiting', 'MonthlyIncome', 'PitchSatisfactionScore', 'NumberOfFollowups', 'DurationOfPitch']   # complete the code to list all numerical feature names (same as in prep.py)
+
+categorical_features = ['TypeofContact', 'CityTier', 'Occupation', 'Gender', 'MaritalStatus', 'Designation', 'ProductPitched']   # complete the code to list all categorical feature names (same as in prep.py)
+
+# Set the class weight to handle class imbalance
+class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
+
+# Define the preprocessing steps
+preprocessor = make_column_transformer(
+    (StandardScaler(), numeric_features),
+    (OneHotEncoder(handle_unknown='ignore'), categorical_features)
+)
+# Define base XGBoost model
+xgb_model = xgb.XGBClassifier(scale_pos_weight=class_weight, random_state=42)
+
+# Define hyperparameter grid
+# Fill in suitable values for each parameter based on your understanding of XGBoost tuning.
+param_grid = {
+    'xgbclassifier__n_estimators': [100, 200],        # Number of boosting trees. More trees can improve performance but increase training time.
+    'xgbclassifier__max_depth': [3, 5],           # Maximum depth of each tree. Higher values increase model complexity and risk of overfitting.
+    'xgbclassifier__colsample_bytree': [0.7, 1.0],    # Fraction of features sampled when building each tree.
+    'xgbclassifier__colsample_bylevel': [0.7, 1.0],   # Fraction of features sampled at each tree level.
+    'xgbclassifier__learning_rate': [0.05, 0.1],       # Step size used during boosting. Smaller values may improve generalization but require more trees.
+    'xgbclassifier__reg_lambda': [1, 2],          # L2 regularization strength. Higher values help reduce overfitting.
+}
+# Model Pipeline
+model_pipeline = make_pipeline(preprocessor, xgb_model)   # complete the code to build the model pipeline by chaining preprocessor and xgb_model
+
+# Start MLflow run
+with mlflow.start_run():
+    # Hyperparameter tuning with GridSearchCV
+    grid_search = GridSearchCV(model_pipeline, param_grid, cv=5, n_jobs=-1)
+    grid_search.fit(Xtrain, ytrain)
+
+    # Log hyperparameters
+    mlflow.log_params(grid_search.best_params_)
+
+    # Store the best model
+    best_model = grid_search.best_estimator_
+
+    # Set classification threshold
+    # Experiment with different threshold values and observe their impact on
+    # precision, recall, F1-score, and overall model performance.
+    classification_threshold = 0.5    # Choose a classification threshold between 0 and 1.Lower thresholds typically increase recall and decrease precision and vice versa. Experiment with different values to find the best trade-off.
+
+    # Make predictions on the training and test data
+    y_pred_train_proba = best_model.predict_proba(Xtrain)[:, 1]
+    y_pred_train = (y_pred_train_proba >= classification_threshold).astype(int)
+
+    y_pred_test_proba = best_model.predict_proba(Xtest)[:, 1]
+    y_pred_test = (y_pred_test_proba >= classification_threshold).astype(int)
+
+    # Evaluation
+    train_report = classification_report(ytrain, y_pred_train, output_dict=True)
+    test_report = classification_report(ytest, y_pred_test, output_dict=True)
+
+# Log metrics
+    mlflow.log_metrics({
+        "train_accuracy": train_report['accuracy'],
+        "train_precision": train_report['1']['precision'],
+        "train_recall": train_report['1']['recall'],
+        "train_f1-score": train_report['1']['f1-score'],
+        "test_accuracy": test_report['accuracy'],
+        "test_precision": test_report['1']['precision'],
+        "test_recall": test_report['1']['recall'],
+        "test_f1-score": test_report['1']['f1-score']
+    })
+
+    # Save the model locally
+    model_path = "tourism_xgb_model.joblib"   # Specify the local file path where the trained model should be saved.
+    joblib.dump(best_model, model_path)  # complete the code to save the model
+
+   # Log the model artifact
+    mlflow.log_artifact(model_path, artifact_path="model")
+    print(f"Model saved as artifact at: {model_path}")
+
+   # Upload to Hugging Face
+    repo_id = "fzsiengwe/tourism-package-prediction-model"   # Replace <-------Hugging Face user ID --------->/<-------> with your Hugging Face username and model repository name.
+
+    repo_type = "model"   #complete the code to create type of repository
+
+  # Step 1: Check if the space exists
+    try:
+        api.repo_info(repo_id=repo_id, repo_type=repo_type)
+        print(f"Space '{repo_id}' already exists. Using it.")
+    except RepositoryNotFoundError:
+        print(f"Space '{repo_id}' not found. Creating new space...")
+        create_repo(repo_id=repo_id, repo_type=repo_type, private=False)
+        print(f"Space '{repo_id}' created.")
+
+ # create_repo("churn-model", repo_type="model", private=False)
+    api.upload_file(
+        path_or_fileobj=model_path,   # Complete the code
+        path_in_repo="tourism_xgb_model.joblib",   # Replace with the filename to store in the repository
+        repo_id=repo_id,
+        repo_type=repo_type,
+    )
