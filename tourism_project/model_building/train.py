@@ -16,10 +16,11 @@ mlflow.set_experiment("tourism_package_prediction")     # complete the code to s
 
 # Hugging Face API authentication
 api = HfApi(token=os.getenv("HF_TOKEN"))  # complete the code to read HF_TOKEN from environment variable
-Xtrain_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/Xtrain.csv"  # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
-Xtest_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/Xtest.csv"    # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
-ytrain_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/ytrain.csv"  # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
-ytest_path = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/ytest.csv"    # Replace <-------Hugging Face user ID --------->/<----Space_Name---> with your Hugging Face username and repository
+XXtrain_path = "hf://datasets/fzsiengwe/tourism-dataset/Xtrain.csv"
+Xtest_path  = "hf://datasets/fzsiengwe/tourism-dataset/Xtest.csv"
+ytrain_path = "hf://datasets/fzsiengwe/tourism-dataset/ytrain.csv"
+ytest_path  = "hf://datasets/fzsiengwe/tourism-dataset/ytest.csv"
+
 
 # Load datasets
 Xtrain = pd.read_csv(Xtrain_path)

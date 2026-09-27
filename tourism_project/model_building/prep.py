@@ -14,7 +14,7 @@ from huggingface_hub import login, HfApi
 
 # Define constants for the dataset and output paths
 api = HfApi(token=os.getenv("HF_TOKEN"))  # complete the code to read HF_TOKEN from environment variable
-DATASET_PATH = "hf://datasets/fzsiengwe/Tourism-Project-Prediction/tourism.csv"   # Replace <-------Hugging Face user ID ---------> with your Hugging Face username
+DATASET_PATH = "hf://datasets/fzsiengwe/tourism-dataset/tourism.csv"
 tourism_df = pd.read_csv(DATASET_PATH)
 print("Dataset loaded successfully.")
 
@@ -63,10 +63,10 @@ ytest.to_csv("ytest.csv", index=False)
 files = ["Xtrain.csv", "Xtest.csv", "ytrain.csv", "ytest.csv"]
 
 # Upload each split file to the Hugging Face dataset repository
-for file_path in files:
+for file_path in ["Xtrain.csv", "Xtest.csv", "ytrain.csv", "ytest.csv"]:
     api.upload_file(
         path_or_fileobj=file_path,
-        path_in_repo=file_path.split("/")[-1],  # just the filename
-        repo_id="fzsiengwe/Tourism-Project-Prediction",  # Replace <-------Hugging Face user ID ---------> with your Hugging Face username
-        repo_type="space",   #complete the code to create type of repository
+        path_in_repo=file_path,
+        repo_id="fzsiengwe/tourism-dataset",
+        repo_type="dataset",   # ← was "space"
     )
