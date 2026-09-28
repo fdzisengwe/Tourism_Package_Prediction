@@ -20,9 +20,14 @@ except RepositoryNotFoundError:
     print(f"Space '{space_repo_id}' created.")
 
 # Upload the deployment folder (Dockerfile, app.py, requirements.txt)
-api.upload_folder(
-    folder_path="tourism_project/deployment",
-    repo_id=space_repo_id,
-    repo_type="space",
-    path_in_repo="",
-)
+try:
+    api.upload_folder(
+        folder_path="tourism_project/deployment",
+        repo_id=space_repo_id,
+        repo_type="space",
+        path_in_repo="",
+    )
+    print(f"Deployment files uploaded to Space '{space_repo_id}'.")
+except Exception as e:
+    print(f"Failed to upload deployment folder: {e}")
+    raise
