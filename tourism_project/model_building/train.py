@@ -105,7 +105,7 @@ with mlflow.start_run():
     print(f"Model saved as artifact at: {model_path}")
 
    # Upload to Hugging Face
-    repo_id = "fzsiengwe/tourism-package-prediction-model"   # Replace <-------Hugging Face user ID --------->/<-------> with your Hugging Face username and model repository name.
+    repo_id = "fzisengwe/tourism-package-prediction-model"   # Replace <-------Hugging Face user ID --------->/<-------> with your Hugging Face username and model repository name.
 
     repo_type = "model"   #complete the code to create type of repository
 

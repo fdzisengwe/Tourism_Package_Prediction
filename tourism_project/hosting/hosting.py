@@ -4,7 +4,7 @@ import os
 
 api = HfApi(token=os.getenv("HF_TOKEN"))
 
-space_repo_id = "fzsiengwe/Tourism-Project-Prediction"
+space_repo_id = "fzisengwe/Tourism-Project-Prediction"
 
 try:
     api.repo_info(repo_id=space_repo_id, repo_type="space")

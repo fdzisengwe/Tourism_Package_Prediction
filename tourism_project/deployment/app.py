@@ -4,7 +4,7 @@ from huggingface_hub import hf_hub_download
 import joblib
 
 # Download the model from the Model Hub
-model_path = hf_hub_download(repo_id="fzsiengwe/tourism-package-prediction-model", filename="tourism_xgb_model.joblib")   # Replace <-------Hugging Face user ID --------->/<---model_repository_name--->", filename="<---model_filename---> with your Hugging Face username, model repository name, and model filename.
+model_path = hf_hub_download(repo_id="fzisengwe/tourism-package-prediction-model", filename="tourism_xgb_model.joblib")   # Replace <-------Hugging Face user ID --------->/<---model_repository_name--->", filename="<---model_filename---> with your Hugging Face username, model repository name, and model filename.
 
 # Load the model
 model = joblib.load(model_path)   # complete the code to load the downloaded model

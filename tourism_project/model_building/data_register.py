@@ -5,7 +5,7 @@ from huggingface_hub.utils import RepositoryNotFoundError
 
 api = HfApi(token=os.getenv("HF_TOKEN"))
 
-repo_id = "fzsiengwe/tourism-dataset"
+repo_id = "fzisengwe/tourism-dataset"
 repo_type = "dataset"
 
 # Ensure repo exists
