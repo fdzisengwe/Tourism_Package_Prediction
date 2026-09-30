@@ -14,7 +14,7 @@ from huggingface_hub import login, HfApi
 
 # Define constants for the dataset and output paths
 api = HfApi(token=os.getenv("HF_TOKEN"))  # complete the code to read HF_TOKEN from environment variable
-DATASET_PATH = "hf://datasets/fzsiengwe/tourism-dataset/tourism.csv"
+DATASET_PATH = "hf://datasets/fzisengwe/tourism-dataset/tourism.csv"
 tourism_df = pd.read_csv(DATASET_PATH)
 print("Dataset loaded successfully.")
 
@@ -67,6 +67,6 @@ for file_path in ["Xtrain.csv", "Xtest.csv", "ytrain.csv", "ytest.csv"]:
     api.upload_file(
         path_or_fileobj=file_path,
         path_in_repo=file_path,
-        repo_id="fzsiengwe/tourism-dataset",
+        repo_id="fzisengwe/tourism-dataset",
         repo_type="dataset",   # ← was "space"
     )
